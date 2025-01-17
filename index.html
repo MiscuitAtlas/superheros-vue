@@ -12,33 +12,54 @@
     <div id="navbarplaceholder"></div>
 
     <div id="app" class="container mt-5">
-      <h1 class="text-center my-4">Liste des SuperHéros</h1>
+      <h1 class="text-center my-4">SuperPower Matcher</h1>
 
-      <ul class="list-group">
-        <li 
-          v-for="personnage in superheros" 
-          :key="personnage.id" 
-          class="list-group-item list-group-item-action d-flex align-items-center justify-content-between"
-          @click="naviguerDetail(personnage.id)"
-          style="cursor: pointer;"
-        >
-          <img 
-            :src="personnage.images.md" 
-            alt="Image de {{ personnage.name }}" 
-            class="rounded-circle mx-3" 
-            style="width: 50px; height: 50px;"
+      <div class="mb-4">
+        <div class="form-group" v-for="(value, power) in availablePowers" :key="power">
+          <label :for="power + '-range'">{{ value }} :</label>
+          <input 
+            type="range" 
+            class="form-range" 
+            :id="power + '-range'" 
+            min="0" max="100" step="1" 
+            v-model="selectedPowers[power].level"
           >
+          <span>{{ selectedPowers[power].level }}</span>
+        </div>
+        <button class="btn btn-primary mt-3" @click="findMatchingHeroes">Trouver des super-héros</button>
+      </div>
 
-          <h5 class="mb-0">{{ personnage.name }}</h5>
+      <div v-if="matchingHeroes.length > 0" class="mt-5">
+        <h4>Super-héros correspondants :</h4>
+        <ul class="list-group">
+          <li 
+            v-for="(hero, index) in matchingHeroes" 
+            :key="hero.id" 
+            class="list-group-item list-group-item-action d-flex align-items-center justify-content-between"
+            style="cursor: pointer;"
+          >
+            <img 
+              :src="hero.images.md" 
+              alt="Image de {{ hero.name }}" 
+              class="rounded-circle mx-3" 
+              style="width: 50px; height: 50px;"
+            >
 
-          <span>
-            <strong>Pouvoirs :</strong> 
-            {{ formatPowers(personnage.powerstats) }}
-          </span>
+            <h5 class="mb-0">{{ hero.name }}</h5>
 
-          <small>{{ personnage.id }}</small>
-        </li>
-      </ul>
+            <span>
+              <strong>Pouvoirs :</strong> 
+              {{ formatPowers(hero.powerstats) }}
+            </span>
+
+            <small>{{ hero.id }}</small>
+          </li>
+        </ul>
+      </div>
+
+      <div v-else>
+        <h5>Aucun super-héros ne correspond aux pouvoirs sélectionnés.</h5>
+      </div>
     </div>
 
     <script>
@@ -52,7 +73,24 @@
       const app = Vue.createApp({
         data() {
           return {
-            superheros: []
+            superheros: [],
+            availablePowers: {
+              intelligence: "Intelligence",
+              strength: "Force",
+              speed: "Vitesse",
+              durability: "Endurance",
+              power: "Puissance",
+              combat: "Combat"
+            },
+            selectedPowers: {
+              intelligence: { level: 0 },
+              strength: { level: 0 },
+              speed: { level: 0 },
+              durability: { level: 0 },
+              power: { level: 0 },
+              combat: { level: 0 }
+            },
+            matchingHeroes: []
           };
         },
         mounted() {
@@ -64,8 +102,46 @@
             .catch(error => console.error("Erreur lors de la récupération des données :", error));
         },
         methods: {
-          naviguerDetail(id) {
-            window.location.href = `details.html?id=${id}`;
+          findMatchingHeroes() {
+          if (this.isAllZero()) {
+              this.matchingHeroes = [...this.superheros];
+          } else {
+              this.matchingHeroes = this.superheros.filter(hero => {
+              return Object.keys(this.selectedPowers).every(power => {
+                  const selectedPower = this.selectedPowers[power];
+                  const heroPowerValue = hero.powerstats[power];
+
+                  if (selectedPower.level === 0) {
+                  return true;
+                  }
+
+                  const tolerance = this.getToleranceForPower(power, selectedPower.level);
+                  return Math.abs(Number(heroPowerValue) - selectedPower.level) <= tolerance;
+              });
+              });
+          }
+          },
+
+          getToleranceForPower(power, level) {
+          switch (power) {
+              case 'intelligence':
+              return 0;
+              case 'strength':
+              return 0;
+              case 'speed':
+              return 0;
+              case 'durability':
+              return 0;
+              case 'power':
+              return 0;
+              case 'combat':
+              return 0;
+              default:
+              return 0;
+          }
+          },
+          isAllZero() {
+            return Object.values(this.selectedPowers).every(power => power.level === 0);
           },
           formatPowers(powerstats) {
             return Object.entries(powerstats)
