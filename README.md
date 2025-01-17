@@ -1,5 +1,5 @@
 Description du projet :
-SuperHeroes App est une application web permettant de rechercher, filtrer et afficher des super-héros avec leurs attributs et pouvoirs. 
+TP-Vue.js est une application web permettant de rechercher, filtrer et afficher des super-héros avec leurs attributs et pouvoirs. 
 L'application permet à l'utilisateur de rechercher des personnages par nom, de filtrer par niveau de pouvoirs, et de visualiser une liste de super-héros avec leurs caractéristiques détaillées.
 L'application est construite avec Vue.js et exploite des composants modulaires pour garantir la maintenabilité et la réutilisabilité du code.
 
