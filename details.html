@@ -1,70 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="fr">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperHéros</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
-    <script src="https://unpkg.com/axios@latest"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fiche personnage – SuperHéros</title>
+    <meta name="description" content="Fiche détaillée d'un personnage : statistiques, biographie et apparence.">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/vue@3.5.44/dist/vue.global.prod.js" integrity="sha384-tORx0bXmMnTC28EYQe1coaGZKSQupXQEYDBNex8xkzJ9iqUoNy9Y+VFBhVxi4kUr" crossorigin="anonymous"></script>
+    <script defer src="js/superheros.js"></script>
+    <script defer src="js/pages/details.js"></script>
   </head>
   <body>
-    <div id="navbarplaceholder"></div>
+    <div id="app" v-cloak>
+      <site-nav></site-nav>
 
-    <div id="app" class="container my-5">
-      <h1 class="text-center my-4">Détail du SuperHéros</h1>
+      <main class="container py-4">
+        <a class="d-inline-block mb-3" href="index.html">← Retour à la recherche</a>
 
-      <div v-if="superhero" class="card mx-auto" style="width: 18rem;">
-        <img :src="superhero.images.lg" class="card-img-top" :alt="'Image de ' + superhero.name">
-        <div class="card-body">
-          <h5 class="card-title">{{ superhero.name }}</h5>
-          <p class="card-text">
-            <strong>ID :</strong> {{ superhero.id }}<br>
-            <strong>Nom :</strong> {{ superhero.name }}<br>
-            <strong>Intelligence :</strong> {{ superhero.powerstats.intelligence }}<br>
-            <strong>Force :</strong> {{ superhero.powerstats.strength }}<br>
-            <strong>Vitesse :</strong> {{ superhero.powerstats.speed }}<br>
-            <strong>Durabilité :</strong> {{ superhero.powerstats.durability }}<br>
-            <strong>Pouvoir :</strong> {{ superhero.powerstats.power }}<br>
-            <strong>Combat :</strong> {{ superhero.powerstats.combat }}
-          </p>
-        </div>
-      </div>
+        <load-status :loading="loading" :error="error" @retry="load"></load-status>
 
-      <div v-else>
-        <h5 class="text-center text-muted">Chargement des détails du super-héros...</h5>
-      </div>
+        <section v-if="!loading && !error && !hero" class="py-4">
+          <h1 class="h3">{{ missingTitle }}</h1>
+          <p class="text-body-secondary">Choisissez un personnage depuis la recherche ou la liste complète, ou laissez le hasard décider.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="index.html">Rechercher un personnage</a>
+            <a class="btn btn-outline-primary" href="liste.html">Voir tous les personnages</a>
+            <button type="button" class="btn btn-outline-secondary" @click="randomHero">Un personnage au hasard</button>
+          </div>
+        </section>
+
+        <article v-if="hero" class="row g-4">
+          <div class="col-md-5 col-lg-4">
+            <img class="hero-portrait" :src="hero.images.lg" :alt="'Portrait de ' + hero.name" width="480" height="640">
+          </div>
+          <div class="col-md-7 col-lg-8">
+            <h1 class="mb-1">{{ hero.name }}</h1>
+            <p class="text-body-secondary mb-2">{{ display(hero.biography.fullName) }}</p>
+            <p class="d-flex flex-wrap gap-2 mb-4">
+              <span class="badge text-bg-secondary">{{ hero.biography.publisher || 'Éditeur inconnu' }}</span>
+              <span class="badge" :class="alignmentClass">{{ alignmentLabel(hero.biography.alignment) }}</span>
+              <span class="badge text-bg-light border">n° {{ hero.id }}</span>
+            </p>
+
+            <h2 class="h5">Statistiques <small class="text-body-secondary fw-normal">(total {{ total }} / 600)</small></h2>
+            <hero-stats :stats="hero.powerstats" class="mb-4"></hero-stats>
+
+            <div class="row">
+              <div class="col-lg-6">
+                <h2 class="h5">Biographie</h2>
+                <dl class="hero-facts">
+                  <dt>Alias</dt><dd>{{ display(hero.biography.aliases) }}</dd>
+                  <dt>Lieu de naissance</dt><dd>{{ display(hero.biography.placeOfBirth) }}</dd>
+                  <dt>Première apparition</dt><dd>{{ display(hero.biography.firstAppearance) }}</dd>
+                  <dt>Profession</dt><dd>{{ display(hero.work.occupation) }}</dd>
+                </dl>
+              </div>
+              <div class="col-lg-6">
+                <h2 class="h5">Apparence</h2>
+                <dl class="hero-facts">
+                  <dt>Espèce</dt><dd>{{ display(hero.appearance.race) }}</dd>
+                  <dt>Genre</dt><dd>{{ genderLabel(hero.appearance.gender) }}</dd>
+                  <dt>Taille</dt><dd>{{ display(hero.appearance.height[1]) }}</dd>
+                  <dt>Poids</dt><dd>{{ display(hero.appearance.weight[1]) }}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </article>
+      </main>
+
+      <site-footer></site-footer>
     </div>
-
-    <script>
-      fetch('navbar.html')
-        .then(response => response.text())
-        .then(data => {
-          document.getElementById('navbarplaceholder').innerHTML = data;
-        })
-        .catch(error => console.error('Erreur lors du chargement de la barre de navigation:', error));
-
-      const app = Vue.createApp({
-        data() {
-          return {
-            superhero: null
-          };
-        },
-        mounted() {
-          const params = new URLSearchParams(window.location.search);
-          const id = params.get('id');
-
-          if (id) {
-            axios
-              .get(`https://akabab.github.io/superhero-api/api/id/${id}.json`)
-              .then(response => {
-                this.superhero = response.data;
-              })
-              .catch(error => console.error("Erreur lors de la récupération des données :", error));
-          }
-        }
-      });
-      app.mount("#app");
-    </script>
   </body>
 </html>

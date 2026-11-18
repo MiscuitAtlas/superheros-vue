@@ -1,0 +1,114 @@
+[v-cloak] {
+  display: none;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+.page-intro {
+  max-width: 48rem;
+}
+
+/* --- Liste de personnages --- */
+
+.hero-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hero-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--bs-secondary-bg);
+}
+
+.hero-item-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.hero-item-stats {
+  flex: 1 1 22rem;
+}
+
+/* --- Statistiques --- */
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.35rem 1rem;
+  margin: 0;
+}
+
+.hero-stat dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+}
+
+.hero-stat dd {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.hero-stat .progress {
+  flex: 1;
+  height: 0.5rem;
+}
+
+.hero-stat-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  min-width: 1.75rem;
+  text-align: right;
+}
+
+/* --- Fiche détaillée --- */
+
+.hero-portrait {
+  width: 100%;
+  max-width: 20rem;
+  aspect-ratio: 480 / 640;
+  object-fit: cover;
+  border-radius: var(--bs-border-radius-lg);
+  background: var(--bs-secondary-bg);
+}
+
+.hero-facts dt {
+  font-weight: 600;
+}
+
+.hero-facts dd {
+  margin-bottom: 0.75rem;
+}
+
+/* --- SuperPower Matcher --- */
+
+.matcher-value {
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5rem;
+  text-align: right;
+}

@@ -1,157 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="fr">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperHéros</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
-    <script src="https://unpkg.com/axios@latest"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SuperPower Matcher – SuperHéros</title>
+    <meta name="description" content="Trouvez les personnages qui atteignent les niveaux de pouvoir choisis.">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/vue@3.5.44/dist/vue.global.prod.js" integrity="sha384-tORx0bXmMnTC28EYQe1coaGZKSQupXQEYDBNex8xkzJ9iqUoNy9Y+VFBhVxi4kUr" crossorigin="anonymous"></script>
+    <script defer src="js/superheros.js"></script>
+    <script defer src="js/pages/matcher.js"></script>
   </head>
   <body>
-    <div id="navbarplaceholder"></div>
+    <div id="app" v-cloak>
+      <site-nav></site-nav>
 
-    <div id="app" class="container mt-5">
-      <h1 class="text-center my-4">SuperPower Matcher</h1>
+      <main class="container py-4">
+        <h1 class="mb-2">SuperPower Matcher</h1>
+        <p class="page-intro text-body-secondary">
+          Réglez le niveau minimum de chaque statistique : les personnages qui les atteignent toutes s'affichent,
+          du plus puissant au moins puissant. Un curseur à 0 ne filtre pas.
+        </p>
 
-      <div class="mb-4">
-        <div class="form-group" v-for="(value, power) in availablePowers" :key="power">
-          <label :for="power + '-range'">{{ value }} :</label>
-          <input 
-            type="range" 
-            class="form-range" 
-            :id="power + '-range'" 
-            min="0" max="100" step="1" 
-            v-model="selectedPowers[power].level"
-          >
-          <span>{{ selectedPowers[power].level }}</span>
-        </div>
-        <button class="btn btn-primary mt-3" @click="findMatchingHeroes">Trouver des super-héros</button>
-      </div>
+        <load-status :loading="loading" :error="error" @retry="load"></load-status>
 
-      <div v-if="matchingHeroes.length > 0" class="mt-5">
-        <h4>Super-héros correspondants :</h4>
-        <ul class="list-group">
-          <li 
-            v-for="(hero, index) in matchingHeroes" 
-            :key="hero.id" 
-            class="list-group-item list-group-item-action d-flex align-items-center justify-content-between"
-            style="cursor: pointer;"
-          >
-            <img 
-              :src="hero.images.md" 
-              alt="Image de {{ hero.name }}" 
-              class="rounded-circle mx-3" 
-              style="width: 50px; height: 50px;"
-            >
+        <template v-if="!loading && !error">
+          <form class="row g-3 mb-4" @submit.prevent>
+            <div v-for="stat in stats" :key="stat.key" class="col-sm-6 col-lg-4">
+              <label class="form-label d-flex justify-content-between" :for="'min-' + stat.key">
+                <span>{{ stat.label }}</span>
+                <span class="matcher-value fw-semibold">{{ minimums[stat.key] }}</span>
+              </label>
+              <input :id="'min-' + stat.key" v-model.number="minimums[stat.key]" type="range"
+                     class="form-range" min="0" max="100" step="5">
+            </div>
+            <div class="col-12">
+              <button type="button" class="btn btn-outline-secondary" :disabled="!active" @click="reset">Remettre à zéro</button>
+            </div>
+          </form>
 
-            <h5 class="mb-0">{{ hero.name }}</h5>
+          <p v-if="!active" class="text-body-secondary">Déplacez au moins un curseur pour lancer la recherche.</p>
+          <p v-else-if="matches.length === 0" class="alert alert-light">
+            Aucun personnage n'atteint tous ces niveaux. Baissez un ou plusieurs curseurs.
+          </p>
+          <template v-else>
+            <p class="text-body-secondary" aria-live="polite">
+              {{ matches.length }} personnage{{ matches.length > 1 ? 's' : '' }} sur {{ heroes.length }}
+            </p>
+            <div class="list-group">
+              <hero-item v-for="hero in matches.slice(0, 50)" :key="hero.id" :hero="hero" show-stats></hero-item>
+            </div>
+            <p v-if="matches.length > 50" class="text-body-secondary mt-2">
+              Seuls les 50 plus puissants sont affichés : montez un curseur pour affiner.
+            </p>
+          </template>
+        </template>
+      </main>
 
-            <span>
-              <strong>Pouvoirs :</strong> 
-              {{ formatPowers(hero.powerstats) }}
-            </span>
-
-            <small>{{ hero.id }}</small>
-          </li>
-        </ul>
-      </div>
-
-      <div v-else>
-        <h5>Aucun super-héros ne correspond aux pouvoirs sélectionnés.</h5>
-      </div>
+      <site-footer></site-footer>
     </div>
-
-    <script>
-      fetch('navbar.html')
-        .then(response => response.text())
-        .then(data => {
-          document.getElementById('navbarplaceholder').innerHTML = data;
-        })
-        .catch(error => console.error('Erreur lors du chargement de la barre de navigation :', error));
-
-      const app = Vue.createApp({
-        data() {
-          return {
-            superheros: [],
-            availablePowers: {
-              intelligence: "Intelligence",
-              strength: "Force",
-              speed: "Vitesse",
-              durability: "Endurance",
-              power: "Puissance",
-              combat: "Combat"
-            },
-            selectedPowers: {
-              intelligence: { level: 0 },
-              strength: { level: 0 },
-              speed: { level: 0 },
-              durability: { level: 0 },
-              power: { level: 0 },
-              combat: { level: 0 }
-            },
-            matchingHeroes: []
-          };
-        },
-        mounted() {
-          axios
-            .get("https://akabab.github.io/superhero-api/api/all.json")
-            .then(response => {
-              this.superheros = response.data;
-            })
-            .catch(error => console.error("Erreur lors de la récupération des données :", error));
-        },
-        methods: {
-          findMatchingHeroes() {
-          if (this.isAllZero()) {
-              this.matchingHeroes = [...this.superheros];
-          } else {
-              this.matchingHeroes = this.superheros.filter(hero => {
-              return Object.keys(this.selectedPowers).every(power => {
-                  const selectedPower = this.selectedPowers[power];
-                  const heroPowerValue = hero.powerstats[power];
-
-                  if (selectedPower.level === 0) {
-                  return true;
-                  }
-
-                  const tolerance = this.getToleranceForPower(power, selectedPower.level);
-                  return Math.abs(Number(heroPowerValue) - selectedPower.level) <= tolerance;
-              });
-              });
-          }
-          },
-
-          getToleranceForPower(power, level) {
-          switch (power) {
-              case 'intelligence':
-              return 0;
-              case 'strength':
-              return 0;
-              case 'speed':
-              return 0;
-              case 'durability':
-              return 0;
-              case 'power':
-              return 0;
-              case 'combat':
-              return 0;
-              default:
-              return 0;
-          }
-          },
-          isAllZero() {
-            return Object.values(this.selectedPowers).every(power => power.level === 0);
-          },
-          formatPowers(powerstats) {
-            return Object.entries(powerstats)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join(' | ');
-          }
-        }
-      });
-
-      app.mount("#app");
-    </script>
   </body>
 </html>
