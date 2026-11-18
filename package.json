@@ -1,0 +1,11 @@
+{
+  "name": "superheros-vuejs",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Application Vue.js pour rechercher, comparer et explorer des super-héros",
+  "author": "Maxence Français",
+  "scripts": {
+    "test": "node --test",
+    "start": "python3 -m http.server 8000"
+  }
+}
